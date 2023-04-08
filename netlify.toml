@@ -1,8 +1,8 @@
 [build]
-  command = "composer install --no-dev && php spark build"
-  publish = "public"
+  publish = "public/"
+  command = "echo 'Nenhuma etapa de construção especificada'"
 
 [[redirects]]
   from = "/*"
-  to = "/index.php/$1"
+  to = "/index.php/:splat"
   status = 200
