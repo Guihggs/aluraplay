@@ -1,8 +1,0 @@
-[build]
-  publish = "public/"
-  command = "echo 'Nenhuma etapa de construção especificada'"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.php/:splat"
-  status = 200
