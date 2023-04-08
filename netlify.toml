@@ -1,0 +1,8 @@
+[build]
+  command = "composer install --no-dev && php spark build"
+  publish = "public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.php/$1"
+  status = 200
