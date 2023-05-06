@@ -7,51 +7,45 @@ namespace Alura\Mvc\Controller;
 use Alura\Mvc\Entity\Video;
 use Alura\Mvc\Repository\VideoRepository;
 
-class VideoFormController implements Controller
+class NewVideoController implements Controller
 {
-    public function __construct(private VideoRepository $repository)
+    public function __construct(private VideoRepository $videoRepository)
     {
     }
 
     public function processaRequisicao(): void
     {
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-        /** @var ?Video $video */
-        $video = null;
-        if ($id !== false && $id !== null) {
-            $video = $this->repository->find($id);
+        $url = filter_input(INPUT_POST, 'url', FILTER_VALIDATE_URL);
+        if ($url === false) {
+            header('Location: /?sucesso=0');
+            return;
+        }
+        $titulo = filter_input(INPUT_POST, 'titulo');
+        if ($titulo === false) {
+            header('Location: /?sucesso=0');
+            return;
         }
 
-        require_once __DIR__ . '/../../inicio-html.php'; ?>
-        <main class="container">
-            <form class="container__formulario"
-                  method="post">
-                <h2 class="formulario__titulo">Envie um vídeo!</h2>
-                    <div class="formulario__campo">
-                        <label class="campo__etiqueta" for="url">Link embed</label>
-                        <input name="url"
-                               value="<?= $video?->url; ?>"
-                               class="campo__escrita"
-                               required
-                               placeholder="Por exemplo: https://www.youtube.com/embed/FAY1K2aUg5g"
-                               id='url' />
-                    </div>
+        $video = new Video($url, $titulo);
+        if ($_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($_FILES['image']['tmp_name']);
 
-                    <div class="formulario__campo">
-                        <label class="campo__etiqueta" for="titulo">Titulo do vídeo</label>
-                        <input name="titulo"
-                               value="<?= $video?->title; ?>"
-                               class="campo__escrita"
-                               required
-                               placeholder="Neste campo, dê o nome do vídeo"
-                               id='titulo' />
-                    </div>
+            if (str_starts_with($mimeType, 'image/')) {
+                $safeFileName = uniqid('upload_') . '_' . pathinfo($_FILES['image']['name'], PATHINFO_BASENAME);
+                move_uploaded_file(
+                    $_FILES['image']['tmp_name'],
+                    __DIR__ . '/../../public/img/uploads/' . $safeFileName
+                );
+                $video->setFilePath($safeFileName);
+            }
+        }
 
-                    <input class="formulario__botao" type="submit" value="Enviar" />
-            </form>
-        </main>
-
-        <?php
-        require_once __DIR__ . '/../../fim-html.php';
+        $success = $this->videoRepository->add($video);
+        if ($success === false) {
+            header('Location: /?sucesso=0');
+        } else {
+            header('Location: /?sucesso=1');
+        }
     }
 }
